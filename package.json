@@ -1,0 +1,87 @@
+{
+  "name": "To-do",
+  "version": "1.0.0",
+  "description": "Simple To do app for developing an Electron app with React and mongoDB",
+  "author": "Neeraj Maurya",
+  "main": "public/index.js",
+  "homepage": "./",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "^11.10.4",
+    "@emotion/styled": "^11.10.4",
+    "@material-ui/core": "^4.12.4",
+    "@material-ui/icons": "^4.11.3",
+    "@mui/icons-material": "^5.10.6",
+    "@mui/material": "^5.10.7",
+    "bootstrap": "^5.2.2",
+    "cross-env": "^6.0.3",
+    "electron-is-dev": "^1.1.0",
+    "mongoose": "^6.6.2",
+    "react": "^16.11.0",
+    "react-bootstrap": "^2.5.0",
+    "react-dom": "^16.11.0",
+    "react-router-dom": "^5.1.2",
+    "react-scripts": "3.2.0",
+    "react-voice-recorder": "^2.1.2",
+    "recordrtc": "^5.6.2"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "electron:serve": "concurrently -k \"cross-env BROWSER=none yarn start\" \"yarn electron:start\"",
+    "electron:build": "yarn build && electron-builder -c.extraMetadata.main=build/index.js",
+    "electron:start": "wait-on tcp:3000 && electron ."
+  },
+  "build": {
+    "extends": null,
+    "appId": "com.todo.app",
+    "win": {
+      "target": "NSIS"
+    },
+    "protocols": {
+      "name": "electron-deep-linking",
+      "schemes": [
+        "todo"
+      ]
+    },
+    "files": [
+      "dist/**/*",
+      "build/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "target": "NSIS",
+    "directories": {
+      "buildResources": "assets",
+      "output": "release/"
+    },
+    "nsis": {
+      "allowToChangeInstallationDirectory": true,
+      "oneClick": false,
+      "deleteAppDataOnUninstall": true
+    }
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "concurrently": "^5.0.0",
+    "electron": "^7.1.0",
+    "electron-builder": "^22.1.0",
+    "wait-on": "^3.3.0"
+  }
+}
