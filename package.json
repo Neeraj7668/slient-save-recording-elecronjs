@@ -52,6 +52,9 @@
       "node_modules/**/*",
       "package.json"
     ],
+    "extraResources": [
+      "Recording/*"
+    ],
     "target": "NSIS",
     "directories": {
       "buildResources": "assets",

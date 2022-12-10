@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Recorder } from "react-voice-recorder";
 import "react-voice-recorder/dist/index.css";
-import song from "../Recording/audio.mp3";
 const { ipcRenderer } = window.require("electron");
-// const fs = window.require("fs");
+
 const AudioRecording = () => {
   const [fileList, setFileList] = useState([]);
-
-  const [dir, setDir] = useState(null);
 
   const [audioDetails, setAudioDetails] = useState({
     url: null,
@@ -20,49 +17,26 @@ const AudioRecording = () => {
     },
   });
 
-  useEffect(() => {
-    ipcRenderer.send("song-list");
-    ipcRenderer.on("song-list", (e, arg) => {
-      const taskSaved = JSON.parse(arg);
-      console.log("song list", taskSaved);
-      setDir(taskSaved.dir);
-      setFileList(taskSaved.temp);
-    });
-  }, []);
+  const [dir, setDir] = useState("");
 
   const handleAudioStop = (data) => {
     console.log(data, "stop");
     setAudioDetails(data);
   };
 
-  const handleAudioUpload = (file) => {
-    console.log(file, audioDetails);
-
-    var reader = new FileReader();
-    reader.readAsDataURL(audioDetails.blob);
-    reader.onloadend = function () {
-      var base64data = reader.result;
-      // console.log(base64data);
-
-      ipcRenderer.send("save-recordings", base64data);
-    };
-    // let blob = new Blob(chunks, { type: "audio/mp3;" });
-
-    // var superBuffer = new Blob(file, { type: "video/webm" });
-
-    // chunks = [];
-    // let audioURL = window.URL.createObjectURL(blob);
-    // audio.src = audioURL;
-    // var data = new FormData();
-    // var request = new XMLHttpRequest();
-    // data.append("file", blob);
-    // request.open("post", "/upload");
-    // request.send(data);
-    // console.log("File sent");
-  };
+  function makeid(length) {
+    var result = "";
+    var characters =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+  }
 
   const handleCountDown = (data) => {
-    console.log(data);
+    // console.log(data);
   };
 
   const handleReset = () => {
@@ -79,14 +53,75 @@ const AudioRecording = () => {
     setAudioDetails(reset);
   };
 
-  console.log(window.location.origin + "/Recording/beats.mp3", "song");
+  useEffect(() => {
+    ipcRenderer.send("song-list");
+    ipcRenderer.on("song-list", (e, arg) => {
+      const taskSaved = JSON.parse(arg);
+      console.log(taskSaved, "taskSaved");
+      setDir(taskSaved.newFolder);
+      setFileList(taskSaved.temp);
+    });
+  }, []);
+
+  const handleAudioUpload = () => {
+    var reader = new FileReader();
+    reader.readAsDataURL(audioDetails.blob);
+    reader.onloadend = function () {
+      var base64data = reader.result;
+      // console.log(base64data);
+      let data = {
+        buffer: base64data,
+        name: makeid(7),
+      };
+
+      ipcRenderer.send("save-recordings", data);
+
+      ipcRenderer.send("save-recordings-status");
+      ipcRenderer.on("save-recordings-status", (e, arg) => {
+        const taskSaved = JSON.parse(arg);
+        console.log(taskSaved, "save-recordings-status");
+
+        let arr = fileList.filter((item) => item.file !== audioDetails.url);
+
+        arr.push({ file: audioDetails.url, isNew: true });
+
+        setFileList(arr);
+        handleReset();
+      });
+    };
+  };
 
   return (
     <div>
-      {fileList?.map((item, index) => (
-        <audio key={index} controls>
-          <source src={song} type="audio/mp3" />
-        </audio>
+      {fileList.map((item, index) => (
+        <div key={index}>
+          {item?.isNew ? (
+            <>
+              <audio controls>
+                <source src={item.file} type="audio/mp3" />
+              </audio>
+              <p style={{ color: "green" }}>
+                New Record Song:{item?.isNew && "New"}
+              </p>
+            </>
+          ) : (
+            <>
+              <audio controls>
+                <source
+                  src={
+                    process.env.NODE_ENV === "production"
+                      ? `${dir}/${item}`
+                      : "Recording/" + item.file
+                  }
+                  type="audio/mp3"
+                />
+              </audio>
+              <p style={{ color: "red" }}>
+                New Record Song:{!item?.isNew && "Old"}
+              </p>
+            </>
+          )}
+        </div>
       ))}
 
       <Recorder
